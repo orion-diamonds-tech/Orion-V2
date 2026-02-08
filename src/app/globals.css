@@ -1,0 +1,30 @@
+@import url(https://db.onlinewebfonts.com/c/f7d34c9e4c3102c89048d775c27a78f3?family=The+Seasons);
+@import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+}
+
+.animate-fadeOut {
+  animation: fadeOut 0.8s ease-out forwards;
+}
+
+#rings,
+#earrings,
+#pendents,
+#bracelets {
+  scroll-margin-top: 100px;
+}
+
+* {
+  font-family: "sans";
+  font-style: normal;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "The Seasons";
+  font-style: normal;
+  font-weight: 400;
+}

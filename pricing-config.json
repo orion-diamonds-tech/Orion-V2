@@ -1,0 +1,34 @@
+{
+  "diamondMargins": {
+    "lessThan1ct": {
+      "multiplier": 5,
+      "flatAddition": 900,
+      "description": "For diamonds < 1ct: multiply by 2.2 and add ₹900"
+    },
+    "greaterThan1ct": {
+      "multiplier": 2.7,
+      "flatAddition": 0,
+      "description": "For diamonds ≥ 1ct: multiply by 2.7"
+    },
+    "baseFees": {
+      "fee1": 150,
+      "fee2": 700,
+      "description": "Flat fees added to all diamond prices"
+    }
+  },
+  "makingCharges": {
+    "lessThan2g": {
+      "ratePerGram": 950,
+      "description": "For gold weight < 2g"
+    },
+    "greaterThan2g": {
+      "ratePerGram": 700,
+      "description": "For gold weight ≥ 2g"
+    },
+    "multiplier": 1.75,
+    "description": "Final making charge is multiplied by 1.75"
+  },
+  "gstRate": 0.03,
+  "lastUpdated": "2025-11-19T14:48:00.565Z",
+  "updatedBy": "TEST"
+}
