@@ -28,13 +28,12 @@ export default function CartPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const token = localStorage.getItem("shopify_customer_token");
     const emailFromSession = session?.user?.email || null;
     const emailFromLocal = localStorage.getItem("customer_email");
 
     const finalEmail = emailFromSession || emailFromLocal || null;
     setCustomerEmail(finalEmail);
-    setIsLoggedIn(!!token || !!finalEmail);
+    setIsLoggedIn(!!finalEmail);
   }, [session]);
 
   // Load cart from localStorage and react to cartUpdated events
@@ -112,10 +111,10 @@ export default function CartPage() {
     if (customerEmail) {
       try {
         await removeItemFromServer(customerEmail, variantId);
-        console.log("✅ Item removed from MongoDB");
+        console.log("✅ Item removed from server");
         toast.success("Item removed from cart");
       } catch (error) {
-        console.error("Failed to remove item from MongoDB:", error);
+        console.error("Failed to remove item from server:", error);
       }
     } else {
       toast.success("Item removed from cart");
