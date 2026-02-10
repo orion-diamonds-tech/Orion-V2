@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { CUSTOMER_CREATE, CUSTOMER_LOGIN } from "../../queries/customer";
 import { shopifyRequest } from "../../utils/shopify";
-import { mergeLocalAndMongoDBCart } from "../../utils/cartSync";
+import { mergeLocalAndServerCart } from "../../utils/cartSync";
 import toast from "react-hot-toast";
 
 export default function LoginPage() {
@@ -118,7 +118,7 @@ export default function LoginPage() {
       toast.loading("Syncing your cart...");
 
       try {
-        await mergeLocalAndMongoDBCart(formData.email);
+        await mergeLocalAndServerCart(formData.email);
         window.dispatchEvent(new Event("cartUpdated"));
         toast.dismiss();
         toast.success("Logged in successfully!");

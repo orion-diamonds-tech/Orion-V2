@@ -24,7 +24,7 @@ import ProductAccordion from "../../../components/accordian";
 import toast from "react-hot-toast";
 import { formatINR } from "../../../utils/formatIndianCurrency";
 import { useSession } from "next-auth/react";
-import { syncCartToMongoDB } from "../../../utils/cartSync";
+import { syncCartToServer } from "../../../utils/cartSync";
 
 export default function ProductDetails() {
   const modalRef = useRef(null);
@@ -188,10 +188,10 @@ export default function ProductDetails() {
 
     if (customerEmail) {
       try {
-        await syncCartToMongoDB(customerEmail);
-        console.log("✅ Cart synced to MongoDB instantly");
+        await syncCartToServer(customerEmail);
+        console.log("✅ Cart synced to server");
       } catch (err) {
-        console.error("MongoDB sync failed:", err);
+        console.error("Server cart sync failed:", err);
       }
     }
   };

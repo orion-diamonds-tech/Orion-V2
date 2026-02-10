@@ -1,16 +1,16 @@
-// src/hooks/useMongoDBCart.js
+// src/hooks/useServerCartSync.js
 "use client";
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import {
-  syncCartToMongoDB,
-  updateQuantityInMongoDB,
-  removeItemFromMongoDB,
-  clearMongoDBCart,
+  syncCartToServer,
+  updateQuantityOnServer,
+  removeItemFromServer,
+  clearServerCart,
 } from "../utils/cartSync";
 
-export function useMongoDBCart() {
+export function useServerCart() {
   const { data: session } = useSession();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -44,14 +44,14 @@ export function useMongoDBCart() {
   };
 
   // Manually call this if you ever need a "force sync" button
-  const syncToMongoDB = async () => {
+  const syncToServer = async () => {
     const email = getCustomerEmail();
     if (!email) return;
 
     try {
-      await syncCartToMongoDB(email);
+      await syncCartToServer(email);
     } catch (error) {
-      console.error("Error syncing to MongoDB:", error);
+      console.error("Error syncing to server:", error);
     }
   };
 
@@ -77,10 +77,10 @@ export function useMongoDBCart() {
       setCartItems(cart);
       window.dispatchEvent(new Event("cartUpdated"));
 
-      // Sync full cart to MongoDB
+      // Sync full cart to server
       const email = getCustomerEmail();
       if (email) {
-        await syncCartToMongoDB(email);
+        await syncCartToServer(email);
       }
     } catch (error) {
       console.error("Error adding item:", error);
@@ -107,7 +107,7 @@ export function useMongoDBCart() {
 
       const email = getCustomerEmail();
       if (email) {
-        await updateQuantityInMongoDB(email, variantId, newQuantity);
+        await updateQuantityOnServer(email, variantId, newQuantity);
       }
     } catch (error) {
       console.error("Error updating quantity:", error);
@@ -132,7 +132,7 @@ export function useMongoDBCart() {
 
       const email = getCustomerEmail();
       if (email) {
-        await removeItemFromMongoDB(email, variantId);
+        await removeItemFromServer(email, variantId);
       }
     } catch (error) {
       console.error("Error removing item:", error);
@@ -153,7 +153,7 @@ export function useMongoDBCart() {
 
       const email = getCustomerEmail();
       if (email) {
-        await clearMongoDBCart(email);
+        await clearServerCart(email);
       }
     } catch (error) {
       console.error("Error clearing cart:", error);
@@ -169,6 +169,6 @@ export function useMongoDBCart() {
     updateQuantity,
     removeItem,
     clearCart,
-    syncToMongoDB,
+    syncToServer,
   };
 }

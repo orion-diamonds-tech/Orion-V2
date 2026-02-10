@@ -9,9 +9,9 @@ import { getProductByHandle } from "../../queries/products";
 import toast from "react-hot-toast";
 import CartItemPriceBreakup from "../../components/CartItemPriceBreakup";
 import {
-  updateQuantityInMongoDB,
-  removeItemFromMongoDB,
-  clearMongoDBCart,
+  updateQuantityOnServer,
+  removeItemFromServer,
+  clearServerCart,
 } from "../../utils/cartSync";
 
 export default function CartPage() {
@@ -87,13 +87,13 @@ export default function CartPage() {
     }
     setCartItems(updatedCart);
 
-    // Sync to MongoDB if logged in
+    // Sync to server if logged in
     if (customerEmail) {
       try {
-        await updateQuantityInMongoDB(customerEmail, variantId, newQuantity);
-        console.log("✅ Quantity updated in MongoDB");
+        await updateQuantityOnServer(customerEmail, variantId, newQuantity);
+        console.log("✅ Quantity updated on server");
       } catch (error) {
-        console.error("Failed to sync quantity to MongoDB:", error);
+        console.error("Failed to sync quantity to server:", error);
       }
     }
   };
@@ -111,7 +111,7 @@ export default function CartPage() {
 
     if (customerEmail) {
       try {
-        await removeItemFromMongoDB(customerEmail, variantId);
+        await removeItemFromServer(customerEmail, variantId);
         console.log("✅ Item removed from MongoDB");
         toast.success("Item removed from cart");
       } catch (error) {
@@ -133,11 +133,11 @@ export default function CartPage() {
 
     if (customerEmail) {
       try {
-        await clearMongoDBCart(customerEmail);
-        console.log("✅ Cart cleared in MongoDB");
+        await clearServerCart(customerEmail);
+        console.log("✅ Cart cleared on server");
         toast.success("Cart cleared");
       } catch (error) {
-        console.error("Failed to clear cart in MongoDB:", error);
+        console.error("Failed to clear cart on server:", error);
       }
     } else {
       toast.success("Cart cleared");
@@ -193,7 +193,7 @@ export default function CartPage() {
         setCartItems([]);
 
         if (email) {
-          await clearMongoDBCart(email);
+          await clearServerCart(email);
         }
 
         toast.success("Redirecting to payment...");
