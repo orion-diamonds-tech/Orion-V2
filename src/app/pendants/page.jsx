@@ -1,7 +1,6 @@
 // app/necklaces/page.jsx
 import CollectionSection from "../../components/collectionsect";
-import { shopifyRequest } from "../../utils/shopify";
-import { GET_NECKLACES_COLLECTION } from "../../queries/necklaces_collection";
+import { getNecklacesCollection } from "../../queries/necklaces_collection";
 import { getSheetPricing } from "../../utils/sheetPricing";
 
 // Cache for 1 hour
@@ -91,9 +90,9 @@ async function transformNecklacesData(productsEdges) {
 
 export default async function NecklacesPage() {
   try {
-    const response = await shopifyRequest(GET_NECKLACES_COLLECTION);
+    const response = await getNecklacesCollection();
 
-    if (!response.data?.collection?.products?.edges) {
+    if (!response?.collection?.products?.edges) {
       return (
         <div className="container mx-auto px-4 md:px-6 lg:px-8 py-10 text-center text-red-600">
           <p>No necklaces found.</p>
@@ -102,7 +101,7 @@ export default async function NecklacesPage() {
     }
 
     const necklaces = await transformNecklacesData(
-      response.data.collection.products.edges
+      response.collection.products.edges
     );
 
     return (

@@ -1,7 +1,6 @@
 // app/earrings/page.jsx
 import CollectionSection from "../../components/collectionsect";
-import { shopifyRequest } from "../../utils/shopify";
-import { GET_EARRINGS_COLLECTION } from "../../queries/earrings_collection";
+import { getEarringsCollection } from "../../queries/earrings_collection";
 import { getSheetPricing } from "../../utils/sheetPricing";
 
 // Cache for 1 hour
@@ -91,9 +90,9 @@ async function transformEarringsData(productsEdges) {
 
 export default async function EarringsPage() {
   try {
-    const response = await shopifyRequest(GET_EARRINGS_COLLECTION);
+    const response = await getEarringsCollection();
 
-    if (!response.data?.collection?.products?.edges) {
+    if (!response?.collection?.products?.edges) {
       return (
         <div className="container mx-auto px-4 md:px-6 lg:px-8 py-10 text-center text-red-600">
           <p>No earrings found.</p>
@@ -102,7 +101,7 @@ export default async function EarringsPage() {
     }
 
     const earrings = await transformEarringsData(
-      response.data.collection.products.edges
+      response.collection.products.edges
     );
 
     return (

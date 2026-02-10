@@ -19,8 +19,7 @@ import {
   ScrollText,
   BadgeCheck,
 } from "lucide-react";
-import { shopifyRequest } from "../../../utils/shopify";
-import { GET_PRODUCT_BY_HANDLE } from "../../../queries/products";
+import { getProductByHandle } from "../../../queries/products";
 import ProductAccordion from "../../../components/accordian";
 import toast from "react-hot-toast";
 import { formatINR } from "../../../utils/formatIndianCurrency";
@@ -278,10 +277,10 @@ export default function ProductDetails() {
 
     try {
       setLoading(true);
-      const response = await shopifyRequest(GET_PRODUCT_BY_HANDLE, { handle });
+      const response = await getProductByHandle(handle);
 
-      if (response.data?.product) {
-        const productData = response.data.product;
+      if (response?.product) {
+        const productData = response.product;
         setProduct(productData);
 
         setSelectedImage(

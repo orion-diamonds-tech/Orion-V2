@@ -5,8 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ShoppingCart, Trash2, Plus, Minus } from "lucide-react";
-import { shopifyRequest } from "../../utils/shopify";
-import { GET_PRODUCT_BY_HANDLE } from "../../queries/products";
+import { getProductByHandle } from "../../queries/products";
 import toast from "react-hot-toast";
 import CartItemPriceBreakup from "../../components/CartItemPriceBreakup";
 import {
@@ -49,13 +48,11 @@ export default function CartPage() {
         items.map(async (item) => {
           if (!item.descriptionHtml && item.handle) {
             try {
-              const response = await shopifyRequest(GET_PRODUCT_BY_HANDLE, {
-                handle: item.handle,
-              });
-              if (response.data?.product) {
+              const response = await getProductByHandle(item.handle);
+              if (response?.product) {
                 return {
                   ...item,
-                  descriptionHtml: response.data.product.descriptionHtml,
+                  descriptionHtml: response.product.descriptionHtml,
                 };
               }
             } catch (err) {

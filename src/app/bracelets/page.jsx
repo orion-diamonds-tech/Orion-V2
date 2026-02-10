@@ -1,7 +1,6 @@
 // Remove "use client" - this is now a Server Component
 import CollectionSection from "../../components/collectionsect";
-import { shopifyRequest } from "../../utils/shopify";
-import { GET_BRACELETS_COLLECTION } from "../../queries/bracelets_collection";
+import { getBraceletsCollection } from "../../queries/bracelets_collection";
 import { getSheetPricing } from "../../utils/sheetPricing";
 
 // Cache for 1 hour (3600 seconds)
@@ -76,9 +75,9 @@ async function transformBraceletsData(productsEdges) {
 
 export default async function BraceletsPage() {
   try {
-    const response = await shopifyRequest(GET_BRACELETS_COLLECTION);
+    const response = await getBraceletsCollection();
 
-    if (!response.data?.collection?.products?.edges) {
+    if (!response?.collection?.products?.edges) {
       return (
         <div className="container mx-auto px-4 md:px-6 lg:px-8 py-10 text-center text-red-600">
           <p>No bracelets found.</p>
@@ -87,7 +86,7 @@ export default async function BraceletsPage() {
     }
 
     const bracelets = await transformBraceletsData(
-      response.data.collection.products.edges
+      response.collection.products.edges
     );
 
     return (

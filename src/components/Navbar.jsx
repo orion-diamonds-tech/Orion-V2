@@ -13,8 +13,7 @@ import {
   FiPhone,
 } from "react-icons/fi";
 import { Loader, X } from "lucide-react";
-import { shopifyRequest } from "../utils/shopify";
-import { SEARCH_PRODUCTS } from "../queries/search";
+import { searchProducts } from "../queries/search";
 
 export function Navbar() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -78,11 +77,8 @@ export function Navbar() {
   const performSearch = async (query) => {
     try {
       setIsSearching(true);
-      const response = await shopifyRequest(SEARCH_PRODUCTS, {
-        query,
-        first: 10,
-      });
-      const edges = response.data?.products?.edges || [];
+      const response = await searchProducts(query, 10);
+      const edges = response?.products?.edges || [];
       setSearchResults(edges);
       setShowResults(edges.length > 0);
     } catch (err) {

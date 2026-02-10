@@ -1,7 +1,6 @@
 // app/rings/page.jsx
 import CollectionSection from "../../components/collectionsect";
-import { shopifyRequest } from "../../utils/shopify";
-import { GET_RINGS_COLLECTION } from "../../queries/collections";
+import { getRingsCollection } from "../../queries/collections";
 import { getSheetPricing } from "../../utils/sheetPricing";
 
 // Cache for 1 hour
@@ -90,9 +89,9 @@ async function transformRingsData(productsEdges) {
 
 export default async function RingsPage() {
   try {
-    const response = await shopifyRequest(GET_RINGS_COLLECTION);
+    const response = await getRingsCollection();
 
-    if (!response.data?.collection?.products?.edges) {
+    if (!response?.collection?.products?.edges) {
       return (
         <div className="container mx-auto px-4 md:px-6 lg:px-8 py-10 text-center text-red-600">
           <p>No rings found.</p>
@@ -101,7 +100,7 @@ export default async function RingsPage() {
     }
 
     const rings = await transformRingsData(
-      response.data.collection.products.edges
+      response.collection.products.edges
     );
 
     return (
