@@ -1,10 +1,10 @@
 import { supabase } from "../utils/supabase.js";
 
-// Transform a Supabase product row into the Shopify GraphQL shape
-// so existing page code works without changes
+// Transform a Supabase product row into the shape
+// existing page code expects
 export function transformProductData(product) {
   return {
-    id: product.shopify_id,
+    id: product.id,
     handle: product.handle,
     title: product.title,
     description: product.description,
@@ -28,14 +28,14 @@ export function transformProductData(product) {
     options: (product.options || [])
       .sort((a, b) => a.position - b.position)
       .map((opt) => ({
-        id: opt.shopify_id,
+        id: opt.id,
         name: opt.name,
         values: opt.values,
       })),
     variants: {
       edges: (product.variants || []).map((variant) => ({
         node: {
-          id: variant.shopify_id,
+          id: variant.id,
           title: variant.title,
           sku: variant.sku,
           availableForSale: variant.available_for_sale,
@@ -61,7 +61,7 @@ export function transformProductData(product) {
   };
 }
 
-// Transform a Supabase collection row into the Shopify GraphQL shape
+// Transform a Supabase collection row into the expected shape
 export function transformCollectionData(collection) {
   const productEdges = (collection.collection_products || [])
     .sort((a, b) => a.position - b.position)
