@@ -43,6 +43,7 @@ async function transformEarringsData(productsEdges) {
       const sheetPricing = await getSheetPricing();
       const handle = product.handle;
       const productPricing = sheetPricing[handle] || {};
+      const variantPrice = parseFloat(firstVariant?.price.amount || 0);
 
       return {
         productCode: firstVariant?.sku || "",
@@ -56,11 +57,11 @@ async function transformEarringsData(productsEdges) {
           shape: diamondDetails.shape,
           count: diamondDetails.count,
         },
-        price: productPricing.price10K || 0,
+        price: productPricing.price10K || variantPrice,
         prices: {
-          "10K": productPricing.price10K || 0,
-          "14K": productPricing.price14K || 0,
-          "18K": productPricing.price18K || 0,
+          "10K": productPricing.price10K || variantPrice,
+          "14K": productPricing.price14K || variantPrice,
+          "18K": productPricing.price18K || variantPrice,
         },
         currency: firstVariant?.price.currencyCode || "INR",
         image: product.featuredImage?.url || firstVariant?.image?.url || "",
