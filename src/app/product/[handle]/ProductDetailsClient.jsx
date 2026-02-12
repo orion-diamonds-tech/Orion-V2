@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import {
   ShoppingCart,
   Heart,
@@ -30,6 +30,8 @@ import { syncWishlistToServer } from "../../../utils/wishlistSync";
 export default function ProductDetails() {
   const modalRef = useRef(null);
   const { handle } = useParams();
+  const searchParams = useSearchParams();
+  const karatFromUrl = searchParams.get("karat");
   const [product, setProduct] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedOptions, setSelectedOptions] = useState({});
@@ -297,12 +299,25 @@ export default function ProductDetails() {
           )?.node || productData.variants.edges[0]?.node; // Fallback to first if Yellow Gold not found
 
         if (defaultVariant) {
-          setSelectedVariant(defaultVariant);
-
           const initialOptions = {};
           defaultVariant.selectedOptions.forEach((option) => {
             initialOptions[option.name] = option.value;
           });
+
+          // Override Gold Karat if passed from collection page
+          if (karatFromUrl && initialOptions["Gold Karat"]) {
+            initialOptions["Gold Karat"] = karatFromUrl;
+            const matchingVariant = productData.variants.edges.find(
+              ({ node }) =>
+                node.selectedOptions.every(
+                  (opt) => initialOptions[opt.name] === opt.value
+                )
+            )?.node;
+            setSelectedVariant(matchingVariant || defaultVariant);
+          } else {
+            setSelectedVariant(defaultVariant);
+          }
+
           setSelectedOptions(initialOptions);
         }
       }
@@ -702,11 +717,11 @@ export default function ProductDetails() {
                 </div>
               )}
 
-              {/* Gold Carat Dropdown */}
+              {/* Gold Karat Dropdown */}
               {product.options.some((opt) => opt.name === "Gold Karat") && (
                 <div className="relative w-48">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Gold Carat
+                    Gold Karat
                   </label>
                   <select
                     className="w-full border border-gray-300 rounded-xl px-4 py-2 cursor-pointer"
@@ -715,7 +730,7 @@ export default function ProductDetails() {
                       handleOptionChange("Gold Karat", e.target.value)
                     }
                   >
-                    <option value="">Select Carat</option>
+                    <option value="">Select Karat</option>
                     {getOptionValues("Gold Karat").map((c) => (
                       <option key={c} value={c}>
                         {c}

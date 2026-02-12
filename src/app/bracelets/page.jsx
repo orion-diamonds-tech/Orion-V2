@@ -40,10 +40,9 @@ async function transformBraceletsData(productsEdges) {
 
       const diamondDetails = extractDiamondDetails(product.description);
 
-      // Calculate actual price using your pricing logic
       const sheetPricing = await getSheetPricing();
       const handle = product.handle;
-      const price10K = sheetPricing[handle]?.price10K || 0;
+      const productPricing = sheetPricing[handle] || {};
 
       return {
         productCode: firstVariant?.sku || "",
@@ -57,7 +56,12 @@ async function transformBraceletsData(productsEdges) {
           shape: diamondDetails.shape,
           count: diamondDetails.count,
         },
-        price: price10K,
+        price: productPricing.price10K || 0,
+        prices: {
+          "10K": productPricing.price10K || 0,
+          "14K": productPricing.price14K || 0,
+          "18K": productPricing.price18K || 0,
+        },
         currency: firstVariant?.price.currencyCode || "INR",
         image: product.featuredImage?.url || firstVariant?.image?.url || "",
         images:
