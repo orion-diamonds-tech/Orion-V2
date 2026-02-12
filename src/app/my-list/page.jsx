@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
-import { syncWishlistToServer } from "../../utils/wishlistSync";
+import {
+  syncWishlistToServer,
+  loadWishlistFromServer,
+} from "../../utils/wishlistSync";
 import { syncCartToServer } from "../../utils/cartSync";
 
 export default function WishlistPage() {
@@ -14,12 +17,21 @@ export default function WishlistPage() {
   const [wishlistItems, setWishlistItems] = useState([]);
 
   useEffect(() => {
+    // Load from localStorage first (instant), then refresh from server
     loadWishlist();
+    if (session?.user?.email) {
+      loadWishlistFromServer(session.user.email).then((items) => {
+        if (items && items.length > 0) {
+          setWishlistItems(items);
+        }
+      });
+    }
+
     const handleWishlistUpdate = () => loadWishlist();
     window.addEventListener("wishlistUpdated", handleWishlistUpdate);
     return () =>
       window.removeEventListener("wishlistUpdated", handleWishlistUpdate);
-  }, []);
+  }, [session]);
 
   const loadWishlist = () => {
     const items = JSON.parse(localStorage.getItem("wishlist") || "[]");

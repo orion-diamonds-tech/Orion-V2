@@ -13,6 +13,7 @@ import {
   updateQuantityOnServer,
   removeItemFromServer,
   clearServerCart,
+  loadCartFromServer,
 } from "../../utils/cartSync";
 
 export default function CartPage() {
@@ -68,10 +69,17 @@ export default function CartPage() {
 
     loadCart();
 
+    // Refresh from server if logged in (cross-device sync)
+    if (session?.user?.email) {
+      loadCartFromServer(session.user.email).then(() => {
+        loadCart();
+      });
+    }
+
     const handleCartUpdate = () => loadCart();
     window.addEventListener("cartUpdated", handleCartUpdate);
     return () => window.removeEventListener("cartUpdated", handleCartUpdate);
-  }, []);
+  }, [session]);
 
   const updateQuantity = async (variantId, newQuantity) => {
     if (newQuantity < 1) return;
