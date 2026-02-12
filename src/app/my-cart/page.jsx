@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ShoppingCart, Trash2, Plus, Minus } from "lucide-react";
@@ -173,6 +174,7 @@ export default function CartPage() {
         return;
       }
 
+      // Step 1: Create Razorpay order on server
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -184,28 +186,85 @@ export default function CartPage() {
 
       const data = await response.json();
 
-      if (data.success) {
-        if (typeof window !== "undefined") {
-          localStorage.setItem("cart", JSON.stringify([]));
-          window.dispatchEvent(new Event("cartUpdated"));
-        }
-        setCartItems([]);
-
-        if (email) {
-          await clearServerCart(email);
-        }
-
-        toast.success("Redirecting to payment...");
-        window.location.href = data.invoiceUrl;
-      } else {
+      if (!data.success) {
         toast.error(data.error || "Failed to create order");
         setError(data.error);
+        setLoading(false);
+        return;
       }
+
+      // Step 2: Open Razorpay checkout modal
+      const options = {
+        key: data.key,
+        amount: data.amount,
+        currency: data.currency,
+        name: "Orion Diamonds",
+        description: "Jewelry Purchase",
+        order_id: data.orderId,
+        prefill: {
+          email: email,
+        },
+        theme: {
+          color: "#0a1833",
+        },
+        handler: async (razorpayResponse) => {
+          // Step 3: Verify payment on server
+          try {
+            toast.loading("Verifying payment...");
+
+            const verifyRes = await fetch("/api/checkout/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: razorpayResponse.razorpay_order_id,
+                razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+                razorpay_signature: razorpayResponse.razorpay_signature,
+                customerEmail: email,
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+            toast.dismiss();
+
+            if (verifyData.success) {
+              // Clear local cart after successful payment
+              localStorage.setItem("cart", JSON.stringify([]));
+              window.dispatchEvent(new Event("cartUpdated"));
+              setCartItems([]);
+
+              toast.success("Payment successful!");
+              router.push(
+                `/order-confirmation?order=${verifyData.orderNumber}`
+              );
+            } else {
+              toast.error("Payment verification failed. Please contact support.");
+              setError("Payment verification failed");
+            }
+          } catch (verifyErr) {
+            console.error("Verification error:", verifyErr);
+            toast.dismiss();
+            toast.error("Payment verification failed. Please contact support.");
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            toast("Payment cancelled", { icon: "ℹ️" });
+            setLoading(false);
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", (response) => {
+        console.error("Payment failed:", response.error);
+        toast.error(response.error.description || "Payment failed");
+        setLoading(false);
+      });
+      rzp.open();
     } catch (err) {
       console.error("Checkout error:", err);
       toast.error("Failed to create checkout");
       setError(`Failed to create checkout: ${err.message}`);
-    } finally {
       setLoading(false);
     }
   };
@@ -232,6 +291,7 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-25 mt-10 px-4 sm:px-6 lg:px-8">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
           <h1 className="text-3xl font-bold text-[#0a1833] text-center sm:text-left">

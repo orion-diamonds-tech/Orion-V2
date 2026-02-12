@@ -9,6 +9,7 @@ export default function AccountPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [customer, setCustomer] = useState(null);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -21,6 +22,7 @@ export default function AccountPage() {
     }
 
     fetchCustomerData(session.user.email);
+    fetchOrders(session.user.email);
   }, [status, session, router]);
 
   const fetchCustomerData = async (email) => {
@@ -48,6 +50,20 @@ export default function AccountPage() {
       setError("Failed to load account information");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOrders = async (email) => {
+    try {
+      const res = await fetch(
+        `/api/orders?email=${encodeURIComponent(email)}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(data.orders || []);
+      }
+    } catch (err) {
+      console.error("Error fetching orders:", err);
     }
   };
 
@@ -180,28 +196,82 @@ export default function AccountPage() {
                 Order History
               </h2>
 
-              <div className="text-center py-12">
-                <svg
-                  className="w-20 h-20 mx-auto text-gray-300 mb-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                  />
-                </svg>
-                <p className="text-gray-600 text-lg">No orders yet</p>
-                <button
-                  onClick={() => router.push("/")}
-                  className="mt-4 bg-[#0a1833] text-white px-6 py-2.5 rounded-lg font-medium hover:bg-[#142850] transition"
-                >
-                  Start Shopping
-                </button>
-              </div>
+              {orders.length === 0 ? (
+                <div className="text-center py-12">
+                  <svg
+                    className="w-20 h-20 mx-auto text-gray-300 mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                    />
+                  </svg>
+                  <p className="text-gray-600 text-lg">No orders yet</p>
+                  <button
+                    onClick={() => router.push("/")}
+                    className="mt-4 bg-[#0a1833] text-white px-6 py-2.5 rounded-lg font-medium hover:bg-[#142850] transition"
+                  >
+                    Start Shopping
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {orders.map((order) => (
+                    <div
+                      key={order.id}
+                      className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <p className="font-semibold text-lg">
+                            Order #{order.orderNumber}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {new Date(order.createdAt).toLocaleDateString(
+                              "en-IN",
+                              {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              }
+                            )}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                              order.status === "paid"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-yellow-100 text-yellow-800"
+                            }`}
+                          >
+                            {order.status === "paid" ? "Paid" : "Pending"}
+                          </span>
+                          <p className="font-bold text-lg">
+                            {"\u20B9"}
+                            {Number(order.subtotal).toLocaleString("en-IN")}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        <p>
+                          {order.items.length}{" "}
+                          {order.items.length === 1 ? "item" : "items"}
+                          {" \u2014 "}
+                          {order.items
+                            .map((item) => item.title)
+                            .join(", ")}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
