@@ -25,6 +25,7 @@ import toast from "react-hot-toast";
 import { formatINR } from "../../../utils/formatIndianCurrency";
 import { useSession } from "next-auth/react";
 import { syncCartToServer } from "../../../utils/cartSync";
+import { syncWishlistToServer } from "../../../utils/wishlistSync";
 
 export default function ProductDetails() {
   const modalRef = useRef(null);
@@ -355,6 +356,11 @@ export default function ProductDetails() {
       toast.success("Removed from wishlist");
 
       window.dispatchEvent(new Event("wishlistUpdated"));
+
+      // Sync to server if logged in
+      if (session?.user?.email) {
+        syncWishlistToServer(session.user.email);
+      }
     } else {
       if (!selectedVariant) {
         toast.error("Please select a variant");
@@ -380,6 +386,11 @@ export default function ProductDetails() {
       setIsWishlisted(true);
       toast.success("Added to wishlist!");
       window.dispatchEvent(new Event("wishlistUpdated"));
+
+      // Sync to server if logged in
+      if (session?.user?.email) {
+        syncWishlistToServer(session.user.email);
+      }
     }
   };
 

@@ -8,6 +8,10 @@ import {
   loadCartFromServer,
   syncCartToServer,
 } from "../utils/cartSync";
+import {
+  mergeLocalAndServerWishlist,
+  loadWishlistFromServer,
+} from "../utils/wishlistSync";
 import { cleanupCart } from "../utils/cartCleanup";
 import toast from "react-hot-toast";
 
@@ -65,6 +69,17 @@ export default function CartSyncProvider({ children }) {
             window.dispatchEvent(new Event("cartUpdated"));
           }
         }
+
+        // Sync wishlist alongside cart
+        const localWishlist = JSON.parse(
+          localStorage.getItem("wishlist") || "[]"
+        );
+        if (localWishlist.length > 0) {
+          await mergeLocalAndServerWishlist(customerEmail);
+        } else {
+          await loadWishlistFromServer(customerEmail);
+        }
+        window.dispatchEvent(new Event("wishlistUpdated"));
 
         setSynced(true);
       } catch (error) {

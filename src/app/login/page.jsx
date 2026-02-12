@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { mergeLocalAndServerCart } from "../../utils/cartSync";
+import { mergeLocalAndServerWishlist } from "../../utils/wishlistSync";
 import toast from "react-hot-toast";
 
 export default function LoginPage() {
@@ -110,16 +111,18 @@ export default function LoginPage() {
       // Store email for cart sync fallback
       localStorage.setItem("customer_email", formData.email);
 
-      // Sync cart in background
-      toast.loading("Syncing your cart...");
+      // Sync cart and wishlist in background
+      toast.loading("Syncing your data...");
 
       try {
         await mergeLocalAndServerCart(formData.email);
+        await mergeLocalAndServerWishlist(formData.email);
         window.dispatchEvent(new Event("cartUpdated"));
+        window.dispatchEvent(new Event("wishlistUpdated"));
         toast.dismiss();
         toast.success("Logged in successfully!");
       } catch (syncError) {
-        console.error("Cart sync error:", syncError);
+        console.error("Sync error:", syncError);
         toast.dismiss();
         toast.success("Logged in successfully!");
       }
