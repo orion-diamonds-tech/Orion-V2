@@ -9,6 +9,8 @@ function OrderConfirmationContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orderNumber = searchParams.get("order");
+  const couponCode = searchParams.get("coupon");
+  const discount = searchParams.get("discount");
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -38,6 +40,17 @@ function OrderConfirmationContent() {
             <p className="text-lg text-gray-600 mb-1">
               Order <span className="font-semibold">#{orderNumber}</span>
             </p>
+          )}
+
+          {couponCode && discount && parseFloat(discount) > 0 && (
+            <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 my-4">
+              <p className="text-green-800 text-sm">
+                Coupon <span className="font-semibold">{couponCode}</span> applied
+              </p>
+              <p className="text-green-600 text-sm font-semibold">
+                You saved ₹{parseFloat(discount).toFixed(2)}!
+              </p>
+            </div>
           )}
 
           <p className="text-gray-500 mb-8">

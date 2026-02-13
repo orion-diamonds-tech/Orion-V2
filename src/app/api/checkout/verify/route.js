@@ -47,12 +47,35 @@ export async function POST(request) {
         razorpay_signature,
       })
       .eq("razorpay_order_id", razorpay_order_id)
-      .select("order_number")
+      .select("order_number, id, coupon_code, discount_amount, customer_email")
       .single();
 
     if (updateError) {
       console.error("Failed to update order:", updateError);
       throw updateError;
+    }
+
+    // Record coupon usage if coupon was applied
+    if (order.coupon_code) {
+      try {
+        const { data: coupon } = await supabaseAdmin
+          .from("coupons")
+          .select("id")
+          .eq("code", order.coupon_code)
+          .single();
+
+        if (coupon) {
+          await supabaseAdmin.from("coupon_usages").insert({
+            coupon_id: coupon.id,
+            customer_email: order.customer_email,
+            order_id: order.id,
+            discount_applied: order.discount_amount || 0,
+          });
+        }
+      } catch (couponErr) {
+        console.error("Failed to record coupon usage:", couponErr);
+        // Don't fail the payment verification for this
+      }
     }
 
     // Clear server cart
@@ -66,6 +89,8 @@ export async function POST(request) {
     return NextResponse.json({
       success: true,
       orderNumber: order.order_number,
+      couponCode: order.coupon_code || null,
+      discountAmount: order.discount_amount || 0,
     });
   } catch (error) {
     console.error("Payment verification error:", error);

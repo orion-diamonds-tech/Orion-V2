@@ -58,6 +58,7 @@ export function transformProductData(product) {
         },
       })),
     },
+    pricing: product.pricing || null,
   };
 }
 
@@ -101,6 +102,15 @@ export async function fetchProductByHandle(handle) {
     console.error(`Error fetching product "${handle}":`, error.message);
     return null;
   }
+
+  // Fetch synced pricing data from product_prices table
+  const { data: pricing } = await supabase
+    .from("product_prices")
+    .select("*")
+    .eq("handle", handle)
+    .maybeSingle();
+
+  if (product) product.pricing = pricing;
 
   return product;
 }

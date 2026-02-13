@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { ShoppingCart, Trash2, Plus, Minus } from "lucide-react";
+import { ShoppingCart, Trash2, Plus, Minus, Tag, X } from "lucide-react";
 import { getProductByHandle } from "../../queries/products";
 import toast from "react-hot-toast";
 import CartItemPriceBreakup from "../../components/CartItemPriceBreakup";
@@ -25,6 +25,10 @@ export default function CartPage() {
   const [error, setError] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [customerEmail, setCustomerEmail] = useState(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState("");
 
   // Resolve customerEmail + isLoggedIn safely (client-only)
   useEffect(() => {
@@ -158,6 +162,62 @@ export default function CartPage() {
       0
     );
 
+  // Clear coupon when cart items change
+  const prevCartLength = cartItems.length;
+  useEffect(() => {
+    if (appliedCoupon && cartItems.length !== prevCartLength) {
+      setAppliedCoupon(null);
+      setCouponCode("");
+      setCouponError("");
+    }
+  }, [cartItems.length]);
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) return;
+
+    if (!isLoggedIn) {
+      setCouponError("Please login to use coupons");
+      return;
+    }
+
+    setCouponLoading(true);
+    setCouponError("");
+
+    try {
+      const response = await fetch("/api/coupon/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: couponCode.trim(),
+          cartItems,
+          customerEmail,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.valid) {
+        setAppliedCoupon(data);
+        toast.success(data.message);
+      } else {
+        setCouponError(data.error);
+        toast.error(data.error);
+      }
+    } catch (err) {
+      setCouponError("Failed to validate coupon");
+      toast.error("Failed to validate coupon");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+    toast.success("Coupon removed");
+  };
+
   const handleCheckout = async () => {
     if (!isLoggedIn) {
       toast.error("Please login to proceed to checkout");
@@ -189,6 +249,7 @@ export default function CartPage() {
         body: JSON.stringify({
           cartItems: cartItems,
           customerEmail: email,
+          couponCode: appliedCoupon?.couponCode || null,
         }),
       });
 
@@ -241,9 +302,9 @@ export default function CartPage() {
               setCartItems([]);
 
               toast.success("Payment successful!");
-              router.push(
-                `/order-confirmation?order=${verifyData.orderNumber}`
-              );
+              const confirmUrl = `/order-confirmation?order=${verifyData.orderNumber}` +
+                (verifyData.couponCode ? `&coupon=${verifyData.couponCode}&discount=${verifyData.discountAmount}` : "");
+              router.push(confirmUrl);
             } else {
               toast.error("Payment verification failed. Please contact support.");
               setError("Payment verification failed");
@@ -405,14 +466,84 @@ export default function CartPage() {
               <h2 className="text-xl font-bold text-[#0a1833] mb-4">
                 Order Summary
               </h2>
-              <div className="space-y-3 mb-6 text-sm">
+              <div className="space-y-3 mb-4 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-semibold">
                     ₹{calculateSubtotal().toFixed(2)}
                   </span>
                 </div>
+
+                {appliedCoupon && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount ({appliedCoupon.couponCode})</span>
+                    <span className="font-semibold">
+                      -₹{appliedCoupon.discountAmount.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-between text-base font-bold text-[#0a1833] border-t pt-3">
+                  <span>Total</span>
+                  <span>
+                    ₹{(calculateSubtotal() - (appliedCoupon?.discountAmount || 0)).toFixed(2)}
+                  </span>
+                </div>
               </div>
+
+              {/* Coupon Input */}
+              <div className="border-t pt-4 mb-4">
+                {!appliedCoupon ? (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <Tag size={14} className="inline mr-1" />
+                      Have a coupon code?
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => e.key === "Enter" && applyCoupon()}
+                        placeholder="Enter code"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0a1833] focus:border-transparent uppercase"
+                      />
+                      <button
+                        onClick={applyCoupon}
+                        disabled={couponLoading || !couponCode.trim()}
+                        className="px-4 py-2 bg-[#0a1833] text-white rounded-lg text-sm font-medium hover:bg-[#1a2f5a] disabled:opacity-50 transition"
+                      >
+                        {couponLoading ? "..." : "Apply"}
+                      </button>
+                    </div>
+                    {couponError && (
+                      <p className="text-red-500 text-xs mt-1">{couponError}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-green-800 font-semibold text-sm">
+                          <Tag size={14} className="inline mr-1" />
+                          {appliedCoupon.couponCode}
+                        </span>
+                        <p className="text-green-600 text-xs mt-0.5">
+                          {appliedCoupon.message}
+                        </p>
+                      </div>
+                      <button
+                        onClick={removeCoupon}
+                        className="text-red-500 hover:text-red-700 p-1"
+                        title="Remove coupon"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <button
                 onClick={handleCheckout}
                 disabled={loading}

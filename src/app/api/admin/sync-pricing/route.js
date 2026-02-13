@@ -44,12 +44,23 @@ export async function POST(request) {
       );
     }
 
-    // Upsert each row into product_prices
+    // Upsert each row into product_prices with full breakdown
     const upsertData = rows.map((row) => ({
       handle: row.Handle.trim(),
       price_10k: Number(row["10K Price"] || 0),
       price_14k: Number(row["14K Price"] || 0),
       price_18k: Number(row["18K Price"] || 0),
+      weight_10k: Number(row["10K Weight (g)"] || 0),
+      weight_14k: Number(row["14K Weight (g)"] || 0),
+      weight_18k: Number(row["18K Weight (g)"] || 0),
+      diamond_shapes: (row["Diamond Shapes"] || "").trim(),
+      total_diamonds: (row["Total Diamonds"] || "").trim(),
+      diamond_weight: (row["Diamond Weight (each)"] || "").trim(),
+      total_diamond_weight: (row["Total Diamond Weight"] || "").trim(),
+      diamond_price: Number(row["Diamond Price"] || 0),
+      gold_price_14k: Number(row["14k Gold Price"] || 0),
+      making_charges: Number(row["Making charges"] || 0),
+      gst: Number(row["GST"] || 0),
       source: "sheet",
       synced_at: new Date().toISOString(),
     }));

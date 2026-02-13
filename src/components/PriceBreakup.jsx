@@ -6,14 +6,67 @@ export default function PriceBreakup({
   descriptionHtml,
   selectedOptions,
   onPriceData,
+  pricing,
 }) {
   const [priceData, setPriceData] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function computePrice() {
-      if (!descriptionHtml) return;
+      if (!descriptionHtml && !pricing) return;
       setLoading(true);
+
+      const selectedKarat = selectedOptions["Gold Karat"] || "18K";
+      const karatNum = parseInt(selectedKarat);
+
+      // Use synced product_prices data if available
+      if (pricing && pricing.diamond_price && pricing[`weight_${karatNum}k`]) {
+        try {
+          const weightK = Number(pricing[`weight_${karatNum}k`]) || 0;
+          const diamondPrice = Math.round(Number(pricing.diamond_price) || 0);
+
+          // Fetch live 24K gold rate from Groww
+          let gold24Price = 8500; // fallback
+          try {
+            const goldRes = await fetch("/api/gold-price");
+            const goldData = await goldRes.json();
+            if (goldData.success && goldData.price) {
+              gold24Price = goldData.price;
+            }
+          } catch (e) {
+            console.warn("Gold price fetch failed, using fallback");
+          }
+
+          const goldPrice = Math.round(gold24Price * (karatNum / 24) * weightK);
+
+          const makingCharge = Math.round(
+            (weightK >= 2 ? weightK * 700 : weightK * 950) * 1.75
+          );
+
+          const subtotal = diamondPrice + goldPrice + makingCharge;
+          const gst = Math.round(subtotal * 0.03);
+          const totalPrice = subtotal + gst;
+
+          setPriceData({
+            diamondPrice,
+            goldPrice,
+            makingCharge,
+            subtotal,
+            gst,
+            totalPrice,
+          });
+          setLoading(false);
+          return;
+        } catch (e) {
+          console.warn("Synced pricing failed, falling back to calculation");
+        }
+      }
+
+      // Fallback: parse HTML and calculate client-side
+      if (!descriptionHtml) {
+        setLoading(false);
+        return;
+      }
 
       const parser = new DOMParser();
       const doc = parser.parseFromString(descriptionHtml, "text/html");
@@ -46,7 +99,6 @@ export default function PriceBreakup({
       }));
 
       // extract gold info
-      const selectedKarat = selectedOptions["Gold Karat"] || "18K";
       const goldWeightKey = Object.keys(specMap).find((key) =>
         key.toLowerCase().includes(selectedKarat.toLowerCase()),
       );
@@ -64,7 +116,7 @@ export default function PriceBreakup({
     }
 
     computePrice();
-  }, [descriptionHtml, selectedOptions]);
+  }, [descriptionHtml, selectedOptions, pricing]);
 
   useEffect(() => {
     if (priceData && onPriceData) {

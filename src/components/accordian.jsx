@@ -305,6 +305,7 @@ export default function ProductAccordion({
           descriptionHtml={product.descriptionHtml}
           selectedOptions={selectedOptions}
           onPriceData={onPriceData}
+          pricing={product.pricing}
         />
       ),
     },
