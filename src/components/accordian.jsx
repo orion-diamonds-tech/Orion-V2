@@ -57,7 +57,7 @@ function DiamondDetails({ descriptionHtml }) {
         weights.length,
         numbers.length,
         totalWeights.length,
-        dimensions.length
+        dimensions.length,
       );
 
       const rows = Array.from({ length: rowCount }, (_, i) => ({
@@ -153,7 +153,7 @@ function ProductSpecs({
       Object.keys(specMap).find(
         (key) =>
           key.toLowerCase().includes(selectedKarat.toLowerCase()) &&
-          key.toLowerCase().includes("gold")
+          key.toLowerCase().includes("gold"),
       ) || null;
 
     // ✅ Save only the selected karat’s weight
@@ -199,7 +199,7 @@ function ProductSpecs({
           !(
             spec.key.toLowerCase().includes("gold") &&
             spec.key.toLowerCase().match(/\d{1,2}k/)
-          ) // remove any key with “9k”, “10k”, etc.
+          ), // remove any key with “9k”, “10k”, etc.
       );
 
     // ✅ Add size/dimensions (only if they have values)
@@ -320,7 +320,7 @@ export default function ProductAccordion({
           </p>
           <p className="text-gray-600 flex items-center gap-2">
             <CircleCheckBig className="w-4 h-4 shrink-0" />
-            Delivery in 7-14 business days
+            Delivery in 15-21 days at your doorstep
           </p>
           <p className="text-gray-600 flex items-center gap-2">
             <CircleCheckBig className="w-4 h-4 shrink-0" />

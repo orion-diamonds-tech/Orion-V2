@@ -48,7 +48,7 @@ export default function PriceBreakup({
       // extract gold info
       const selectedKarat = selectedOptions["Gold Karat"] || "18K";
       const goldWeightKey = Object.keys(specMap).find((key) =>
-        key.toLowerCase().includes(selectedKarat.toLowerCase())
+        key.toLowerCase().includes(selectedKarat.toLowerCase()),
       );
       const goldWeight = parseFloat(specMap[goldWeightKey]) || 0;
 
@@ -109,6 +109,10 @@ export default function PriceBreakup({
           </tr>
         </tbody>
       </table>
+      <h4>
+        *Final weight may vary slightly. Any price difference will be
+        communicated before dispatch.
+      </h4>
     </div>
   );
 }
