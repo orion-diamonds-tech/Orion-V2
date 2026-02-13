@@ -121,6 +121,7 @@ function ProductSpecs({
   selectedOptions,
   selectedVariant,
   options,
+  pricing,
 }) {
   const [specs, setSpecs] = useState([]);
   const [goldWeight, setGoldWeight] = useState(null);
@@ -147,17 +148,25 @@ function ProductSpecs({
 
     // ✅ Determine selected gold karat (e.g., "10K", "14K", etc.)
     const selectedKarat = selectedOptions["Gold Karat"] || "";
+    const karatNum = parseInt(selectedKarat);
 
-    // ✅ Extract correct karat weight key (e.g., "14K Gold" or "14K Weight")
-    const weightKey =
-      Object.keys(specMap).find(
-        (key) =>
-          key.toLowerCase().includes(selectedKarat.toLowerCase()) &&
-          key.toLowerCase().includes("gold"),
-      ) || null;
+    // ✅ Prefer synced weight from product_prices, fallback to description HTML
+    const syncedWeight = pricing && pricing[`weight_${karatNum}k`]
+      ? `${pricing[`weight_${karatNum}k`]}g`
+      : null;
 
-    // ✅ Save only the selected karat’s weight
-    setGoldWeight(weightKey ? specMap[weightKey] : null);
+    if (syncedWeight) {
+      setGoldWeight(syncedWeight);
+    } else {
+      // Fallback: extract from description HTML
+      const weightKey =
+        Object.keys(specMap).find(
+          (key) =>
+            key.toLowerCase().includes(selectedKarat.toLowerCase()) &&
+            key.toLowerCase().includes("gold"),
+        ) || null;
+      setGoldWeight(weightKey ? specMap[weightKey] : null);
+    }
 
     // ✅ Exclude all karat weights regardless of selected one
     const excludeKeys = [
@@ -215,7 +224,7 @@ function ProductSpecs({
     });
 
     setSpecs(parsedSpecs);
-  }, [descriptionHtml, selectedOptions]);
+  }, [descriptionHtml, selectedOptions, pricing]);
 
   if (!specs.length && !goldWeight) return <p>No product details available.</p>;
 
@@ -294,6 +303,7 @@ export default function ProductAccordion({
           selectedOptions={selectedOptions}
           selectedVariant={selectedVariant}
           options={product.options}
+          pricing={product.pricing}
         />
       ),
     },
